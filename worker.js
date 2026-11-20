@@ -396,6 +396,35 @@ if (url.pathname === "/api/db-test") {
         }, 405);
       }
 
+      // Registration rate limiting
+      if (!env.REGISTER_LIMITER) {
+        return reply({
+          error: "Registration protection unavailable."
+        }, 503);
+      }
+
+      try {
+        const ip =
+          request.headers.get("CF-Connecting-IP") ||
+          "unknown";
+
+        const result = await env.REGISTER_LIMITER.limit({
+          key: ip
+        });
+
+        if (!result.success) {
+          return reply({
+            error: "Too many registration attempts. Try again later."
+          }, 429);
+        }
+      } catch (error) {
+        console.error("Registration rate limit failed:", error);
+
+        return reply({
+          error: "Registration temporarily unavailable."
+        }, 503);
+      }
+
       if (!env.DB) {
         return reply({
           error: "Database unavailable."

@@ -1,0 +1,12 @@
+
+{
+  "name": "zev-dod-apex-1",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-19",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "run_worker_first": ["/health", "/test-ai", "/analyze", "/api/*"]
+  }
+}

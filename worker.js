@@ -240,6 +240,37 @@ async function analyzeImage(request, env, origin) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    
+if (url.pathname === "/api/db-test") {
+  if (!env.DB) {
+    return Response.json(
+      { status: "error", message: "D1 binding missing" },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const result = await env.DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('users', 'sessions', 'analysis_cache') ORDER BY name"
+    ).all();
+
+    return Response.json({
+      application: "ZEV DOD APEX",
+      database: "connected",
+      tables: result.results.map(row => row.name),
+      ready: result.results.length === 3
+    });
+  } catch (error) {
+    return Response.json(
+      {
+        database: "error",
+        message: "Database query failed"
+      },
+      { status: 500 }
+    );
+  }
+}
+
     const origin = request.headers.get("Origin") || "";
 
     if (request.method === "OPTIONS") {

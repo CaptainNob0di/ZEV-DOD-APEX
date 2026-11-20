@@ -7,6 +7,13 @@
   "ai": {
     "binding": "AI"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "zev-dod-apex-db",
+      "database_id": "PASTE-YOUR-DATABASE-ID-HERE"
+    }
+  ],
   "assets": {
     "directory": "./",
     "binding": "ASSETS",

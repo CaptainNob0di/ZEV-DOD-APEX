@@ -4,9 +4,17 @@
   "main": "worker.js",
   "compatibility_date": "2026-11-19",
   "workers_dev": true,
+  "ai": {
+    "binding": "AI"
+  },
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
-    "run_worker_first": ["/health", "/test-ai", "/analyze", "/api/*"]
+    "run_worker_first": [
+      "/health",
+      "/test-ai",
+      "/analyze",
+      "/api/*"
+    ]
   }
 }

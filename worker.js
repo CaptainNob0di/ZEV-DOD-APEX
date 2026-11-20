@@ -270,7 +270,22 @@ if (url.pathname === "/api/db-test") {
     );
   }
 }
-
+// ZEV DOD APEX — Account Registration Route
+if (url.pathname === "/api/auth/register") {
+  return Response.json(
+    {
+      application: "ZEV DOD APEX",
+      status: "not_ready",
+      message: "Registration endpoint installed. Account creation is not enabled yet."
+    },
+    {
+      status: 503,
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    }
+  );
+}
     const origin = request.headers.get("Origin") || "";
 
     if (request.method === "OPTIONS") {

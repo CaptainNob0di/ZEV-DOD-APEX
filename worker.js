@@ -377,6 +377,150 @@ if (url.pathname === "/api/db-test") {
   }
 }
 // ZEV DOD APEX — Account Registration Route
+
+    // ZEV DOD APEX — SECURE ACCOUNT REGISTRATION
+    if (url.pathname === "/api/auth/register") {
+      const reply = (data, status = 200) =>
+        new Response(JSON.stringify(data), {
+          status,
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff"
+          }
+        });
+
+      if (request.method !== "POST") {
+        return reply({
+          error: "Method not allowed. Use POST."
+        }, 405);
+      }
+
+      if (!env.DB) {
+        return reply({
+          error: "Database unavailable."
+        }, 503);
+      }
+
+      const contentType =
+        request.headers.get("Content-Type") || "";
+
+      if (!contentType.toLowerCase().includes("application/json")) {
+        return reply({
+          error: "Content-Type must be application/json."
+        }, 415);
+      }
+
+      let payload;
+
+      try {
+        const raw = await request.text();
+
+        if (new TextEncoder().encode(raw).length > 4096) {
+          return reply({
+            error: "Request too large."
+          }, 413);
+        }
+
+        payload = JSON.parse(raw);
+      } catch {
+        return reply({
+          error: "Invalid JSON request."
+        }, 400);
+      }
+
+      if (
+        !payload ||
+        typeof payload !== "object" ||
+        Array.isArray(payload)
+      ) {
+        return reply({
+          error: "Invalid registration data."
+        }, 400);
+      }
+
+      const email =
+        typeof payload.email === "string"
+          ? payload.email.trim().toLowerCase()
+          : "";
+
+      const password = payload.password;
+
+      if (
+        email.length > 254 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ) {
+        return reply({
+          error: "Enter a valid email address."
+        }, 400);
+      }
+
+      if (
+        typeof password !== "string" ||
+        password.length < 12 ||
+        password.length > 128 ||
+        new TextEncoder().encode(password).length > 512
+      ) {
+        return reply({
+          error: "Password must contain 12–128 characters."
+        }, 400);
+      }
+
+      try {
+        const existing = await env.DB.prepare(
+          "SELECT id FROM users WHERE email = ? LIMIT 1"
+        ).bind(email).first();
+
+        if (existing) {
+          return reply({
+            error: "An account with this email already exists."
+          }, 409);
+        }
+
+        const passwordHash = await hashPassword(password);
+        const userId = crypto.randomUUID();
+
+        await env.DB.prepare(
+          `INSERT INTO users
+           (id, email, password_hash, created_at)
+           VALUES (?, ?, ?, ?)`
+        ).bind(
+          userId,
+          email,
+          passwordHash,
+          new Date().toISOString()
+        ).run();
+
+        return reply({
+          application: "ZEV DOD APEX",
+          status: "registered",
+          user: {
+            id: userId,
+            email
+          },
+          message: "Account created successfully."
+        }, 201);
+
+      } catch (error) {
+        const message = String(error?.message || error);
+
+        if (
+          message.includes("UNIQUE constraint failed") ||
+          message.includes("SQLITE_CONSTRAINT")
+        ) {
+          return reply({
+            error: "An account with this email already exists."
+          }, 409);
+        }
+
+        console.error("Registration failed:", message);
+
+        return reply({
+          error: "Registration temporarily unavailable."
+        }, 500);
+      }
+    }
+
     const origin = request.headers.get("Origin") || "";
 
     if (request.method === "OPTIONS") {

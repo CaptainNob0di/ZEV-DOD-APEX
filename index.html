@@ -73,6 +73,54 @@
     <div class="status">
       SYSTEM INTERFACE ONLINE
     </div>
+    
+<button id="testVoice" onclick="testAPEXVoice()">
+  TEST W630 AUDIO
+</button>
+
+<p id="voiceStatus" class="subtitle">
+  Bluetooth voice test ready.
+</p>
+
+<script>
+function testAPEXVoice() {
+  const status = document.getElementById(
+    "voiceStatus"
+  );
+
+  if (!("speechSynthesis" in window)) {
+    status.textContent =
+      "Speech is not supported in this browser.";
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const message = new SpeechSynthesisUtterance(
+    "ZEV DOD APEX online. " +
+    "Tactical voice communication systems ready."
+  );
+
+  message.lang = "en-US";
+  message.rate = 0.9;
+  message.volume = 1;
+
+  message.onstart = () => {
+    status.textContent = "Voice test playing.";
+  };
+
+  message.onend = () => {
+    status.textContent = "Voice test complete.";
+  };
+
+  message.onerror = () => {
+    status.textContent = "Voice playback failed.";
+  };
+
+  window.speechSynthesis.speak(message);
+}
+</script>
+
     <p class="subtitle">
       Initial installation successful.
     </p>

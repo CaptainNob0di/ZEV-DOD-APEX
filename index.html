@@ -126,4 +126,75 @@ function testAPEXVoice() {
     </p>
   </div>
 </body>
+
+<section style="
+  margin:20px auto;
+  max-width:440px;
+  padding:20px;
+  background:#10222e;
+  border:1px solid #2a5664;
+  border-radius:16px;
+  text-align:center;
+">
+  <h2 style="color:#65f0c1;">
+    APEX VISUAL INPUT
+  </h2>
+
+  <p style="color:#a9c5d0;">
+    Select a screenshot or W630 camera photo.
+  </p>
+
+  <input
+    type="file"
+    id="apexImage"
+    accept="image/*"
+    style="width:100%;margin:15px 0;"
+  >
+
+  <img
+    id="apexPreview"
+    alt="Selected image"
+    style="
+      display:none;
+      width:100%;
+      max-height:300px;
+      object-fit:contain;
+      border-radius:10px;
+    "
+  >
+
+  <p id="imageStatus" style="color:#65f0c1;">
+    Waiting for image.
+  </p>
+</section>
+
+<script>
+document.getElementById("apexImage")
+  .addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const preview =
+      document.getElementById("apexPreview");
+
+    const status =
+      document.getElementById("imageStatus");
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+      status.textContent =
+        "Image successfully loaded: " + file.name;
+    };
+
+    reader.onerror = function() {
+      status.textContent = "Unable to load image.";
+    };
+
+    reader.readAsDataURL(file);
+  });
+</script>
+
 </html>

@@ -11,7 +11,34 @@
     {
       "binding": "DB",
       "database_name": "zev-dod-apex-db",
-      "database_id": "PASTE-YOUR-DATABASE-ID-HERE"
+      "database_id": "
+{
+  "name": "zev-dod-apex-1",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-19",
+  "workers_dev": true,
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "zev-dod-apex-db",
+      "database_id": "PASTE-YOUR-ACTUAL-D1-DATABASE-ID-HERE"
+    }
+  ],
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/health",
+      "/test-ai",
+      "/analyze",
+      "/api/*"
+    ]
+  }
+}
+"
     }
   ],
   "assets": {

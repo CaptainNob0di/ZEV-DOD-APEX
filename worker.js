@@ -237,6 +237,112 @@ async function analyzeImage(request, env, origin) {
   }
 }
 
+const PASSWORD_ITERATIONS = 600000;
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(value) {
+  return Uint8Array.from(
+    atob(value),
+    character => character.charCodeAt(0)
+  );
+}
+
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(
+    new Uint8Array(16)
+  );
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const hash = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: PASSWORD_ITERATIONS,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    256
+  );
+
+  return [
+    "pbkdf2_sha256",
+    PASSWORD_ITERATIONS,
+    bytesToBase64(salt),
+    bytesToBase64(new Uint8Array(hash))
+  ].join("$");
+}
+
+async function verifyPassword(password, storedHash) {
+  const parts = storedHash.split("$");
+
+  if (
+    parts.length !== 4 ||
+    parts[0] !== "pbkdf2_sha256"
+  ) {
+    return false;
+  }
+
+  const iterations = Number(parts[1]);
+
+  if (
+    !Number.isInteger(iterations) ||
+    iterations < 100000 ||
+    iterations > 1000000
+  ) {
+    return false;
+  }
+
+  const salt = base64ToBytes(parts[2]);
+  const expected = base64ToBytes(parts[3]);
+
+  if (salt.length !== 16 || expected.length !== 32) {
+    return false;
+  }
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const actual = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations,
+        hash: "SHA-256"
+      },
+      keyMaterial,
+      256
+    )
+  );
+
+  let difference = 0;
+
+  for (let i = 0; i < expected.length; i++) {
+    difference |= actual[i] ^ expected[i];
+  }
+
+  return difference === 0;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
